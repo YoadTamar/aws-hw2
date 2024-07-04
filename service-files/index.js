@@ -25,6 +25,7 @@ app.get('/', (req, res) => {
     res.send(response);
 });
 
+
 // POST /restaurants
 app.post('/restaurants', async (req, res) => {
     const restaurant = req.body;
