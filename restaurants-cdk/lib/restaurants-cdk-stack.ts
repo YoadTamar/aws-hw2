@@ -14,12 +14,10 @@ export class RestaurantsCdkStack extends cdk.Stack {
     super(scope, id, props);
     const useCacheFlag = true;
 
-    // Students TODO Account Details: Change to your account id
-    const labRole = iam.Role.fromRoleArn(this, 'Role', "arn:aws:iam::079553702230:role/LabRole", { mutable: false });
+    const labRole = iam.Role.fromRoleArn(this, 'Role', "arn:aws:iam::991888206011:role/LabRole", { mutable: false });
 
-    // Students TODO Account Details: Change the vpcId to the VPC ID of your existing VPC
     const vpc = ec2.Vpc.fromLookup(this, 'VPC', {
-      vpcId: 'vpc-052733467352389cf',
+      vpcId: 'vpc-040083d8179dfe60c',
     });
 
     this.createNatGatewayForPrivateSubnet(vpc);
@@ -107,7 +105,7 @@ export class RestaurantsCdkStack extends cdk.Stack {
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       role: labRole,
       minCapacity: 1, // Note for students: you may need to change this min capacity for scaling testing if you belive that is right
-      maxCapacity: 1, // Note for students: you may need to change this max capacity for scaling testing if you belive that is right
+      maxCapacity: 3, // Note for students: you may need to change this max capacity for scaling testing if you belive that is right
       desiredCapacity: 1, // Note for students: you may need to change this desired capacity for scaling testing if you belive that is right
     });
 
@@ -171,6 +169,33 @@ export class RestaurantsCdkStack extends cdk.Stack {
       writeCapacity: 1, // Note for students: you may need to change this num write capacity for scaling testing if you belive that is right
     });
 
+    table.addGlobalSecondaryIndex({
+      indexName: 'CuisineIndex',
+      partitionKey: { name: 'Cuisine', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'Rating', type: dynamodb.AttributeType.NUMBER },
+      projectionType: dynamodb.ProjectionType.ALL,
+      readCapacity: 1,
+      writeCapacity: 1,
+    });
+
+    table.addGlobalSecondaryIndex({
+      indexName: 'GeoRegionIndex',
+      partitionKey: { name: 'GeoRegion', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'Rating', type: dynamodb.AttributeType.NUMBER },
+      projectionType: dynamodb.ProjectionType.ALL,
+      readCapacity: 1,
+      writeCapacity: 1,
+    });
+
+    table.addGlobalSecondaryIndex({
+      indexName: 'GeoRegionCuisineIndex',
+      partitionKey: { name: 'GeoRegion', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'Cuisine', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+      readCapacity: 1,
+      writeCapacity: 1,
+    });
+    
     // Output the table name
     new cdk.CfnOutput(this, 'TableName', {
       value: table.tableName,
