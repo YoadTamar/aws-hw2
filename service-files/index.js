@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
         MEMCACHED_CONFIGURATION_ENDPOINT: MEMCACHED_CONFIGURATION_ENDPOINT,
         TABLE_NAME: TABLE_NAME,
         AWS_REGION: AWS_REGION,
-        //USE_CACHE: USE_CACHE
+        USE_CACHE: USE_CACHE
     };
     res.send(response);
 });
