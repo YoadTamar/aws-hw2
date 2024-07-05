@@ -485,6 +485,7 @@ app.get('/restaurants/region/:region', async (req, res) => {
         ScanIndexForward: false // to get top-rated restaurants
     };
 
+    
     try {
         const data = await dynamodb.query(params).promise();
 
@@ -547,6 +548,7 @@ app.get('/restaurants/region/:region/cuisine/:cuisine', async (req, res) => {
             console.error('Error accessing memcached:', cacheError);
         }
     }
+
 
     const params = {
         TableName: TABLE_NAME,
