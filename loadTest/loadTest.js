@@ -1,60 +1,26 @@
 const http = require('http');
 const assert = require('assert');
 
-const endPoint = 'restau-lb8a1-qmuqb266jtik-1199014483.us-east-1.elb.amazonaws.com';
+const endPoint = 'restau-lb8a1-lsr6rtqzforx-219961156.us-east-1.elb.amazonaws.com';
 const port = 80;
 
 const restaurantName = 'ArielsRestaurantA';
 const cuisineName = [
-    "Italian",
-    "Chinese",
-    "Japanese",
-    "Mexican",
-    "Indian",
-    "French",
-    "Thai",
-    "Spanish",
-    "Greek",
-    "Lebanese",
-    "Turkish",
-    "Moroccan",
-    "Vietnamese",
-    "Korean",
-    "Caribbean",
-    "Brazilian",
-    "Ethiopian",
-    "Russian",
-    "German",
-    "Cuban",
-    "American",
-    "British",
-    "Portuguese",
-    "Argentinian",
-    "Peruvian",
-    "Swedish",
-    "Indonesian",
-    "Malaysian",
+    "Italian", "Chinese", "Japanese", "Mexican", "Indian", "French", "Thai", "Spanish", "Greek", "Lebanese",
+    "Turkish", "Moroccan", "Vietnamese", "Korean", "Caribbean", "Brazilian", "Ethiopian", "Russian", "German",
+    "Cuban", "American", "British", "Portuguese", "Argentinian", "Peruvian", "Swedish", "Indonesian", "Malaysian",
     "Filipino"
 ];
 
 const regionName = [
-    "Acre", "Arad", "Ariel", "Ashdod", "Ashkelon",
-    "BatYam", "Beersheba", "BeitShemesh", "BeitShean", "BneiBrak",
-    "Dimona",
-    "Eilat",
-    "Givatayim",
-    "Hadera", "Haifa", "Herzliya", "HodHaSharon", "Holon",
-    "Jerusalem",
-    "Karmiel", "KfarSaba", "KiryatAta", "KiryatBialik", "KiryatGat", "KiryatMalakhi", "KiryatMotzkin", "KiryatOno", "KiryatShmona", "KiryatYam",
-    "Lod",
-    "MaaleAdumim", "MigdalHaEmek", "ModiinMaccabimReut", "ModiinIllit", "Nahariya", "Nazareth", "NazarethIllit", "Nesher", "NessZiona", "Netanya", "Netivot",
-    "Ofakim", "OrAkiva",
-    "Petah Tikva",
-    "Raanana", "Rahat", "RamatGan", "RamatHaSharon", "Ramla", "Rehovot", "RishonLeZion", "RoshHaAyin",
-    "Safed", "Sderot",
-    "TelAviv", "Tiberias", "Tira", "Tzfat",
-    "Yavne", "Yokneam"
-]
+    "Acre", "Arad", "Ariel", "Ashdod", "Ashkelon", "BatYam", "Beersheba", "BeitShemesh", "BeitShean", "BneiBrak",
+    "Dimona", "Eilat", "Givatayim", "Hadera", "Haifa", "Herzliya", "HodHaSharon", "Holon", "Jerusalem", "Karmiel",
+    "KfarSaba", "KiryatAta", "KiryatBialik", "KiryatGat", "KiryatMalakhi", "KiryatMotzkin", "KiryatOno", "KiryatShmona",
+    "KiryatYam", "Lod", "MaaleAdumim", "MigdalHaEmek", "ModiinMaccabimReut", "ModiinIllit", "Nahariya", "Nazareth",
+    "NazarethIllit", "Nesher", "NessZiona", "Netanya", "Netivot", "Ofakim", "OrAkiva", "Petah Tikva", "Raanana", "Rahat",
+    "RamatGan", "RamatHaSharon", "Ramla", "Rehovot", "RishonLeZion", "RoshHaAyin", "Safed", "Sderot", "TelAviv",
+    "Tiberias", "Tira", "Tzfat", "Yavne", "Yokneam"
+];
 
 const numRequests = 100;
 
@@ -83,9 +49,14 @@ const makeRequest = (options, postData = null) => {
     });
 };
 
+// Function to test POST method
 const testPostMethod = async (i) => {
     const RestaurantAName = restaurantName + i;
-    const restaurant = { name: RestaurantAName, cuisine: cuisineName[(i % cuisineName.length)], region: regionName[(i % regionName.length)] };
+    const restaurant = {
+        name: RestaurantAName,
+        cuisine: cuisineName[i % cuisineName.length],
+        region: regionName[i % regionName.length]
+    };
 
     const postOptions = {
         hostname: endPoint,
@@ -107,13 +78,14 @@ const testPostMethod = async (i) => {
         // Assert that the POST request was successful
         assert.strictEqual(postResponse.statusCode, 200, 'Expected POST status code to be 200');
 
-        console.log(`POST ${postOptions.path} Status Code:`, postResponse.statusCode, `; Time Elapsed: ${elapsedTimeInMs}ms`);
+        console.log(`POST ${postOptions.path} Status Code: ${postResponse.statusCode}; Time Elapsed: ${elapsedTimeInMs}ms`);
 
     } catch (error) {
         console.error('POST Test failed:', error);
     }
 };
 
+// Function to test GET method
 const testGetMethod = async (i) => {
     const RestaurantAName = restaurantName + i;
 
@@ -135,22 +107,23 @@ const testGetMethod = async (i) => {
         assert.strictEqual(getResponse.statusCode, 200, 'Expected GET status code to be 200');
         const responseData = JSON.parse(getResponse.data);
         assert.strictEqual(responseData.name, RestaurantAName, 'Expected restaurant name to match');
-        assert.strictEqual(responseData.cuisine, cuisineName[(i % cuisineName.length)], 'Expected cuisine to match');
-        assert.strictEqual(responseData.region, regionName[(i % regionName.length)], 'Expected region to match');
+        assert.strictEqual(responseData.cuisine, cuisineName[i % cuisineName.length], 'Expected cuisine to match');
+        assert.strictEqual(responseData.region, regionName[i % regionName.length], 'Expected region to match');
 
-        console.log(`GET ${getOptions.path} Status Code:`, getResponse.statusCode, `; Time Elapsed: ${elapsedTimeInMs}ms`);
+        console.log(`GET ${getOptions.path} Status Code: ${getResponse.statusCode}; Time Elapsed: ${elapsedTimeInMs}ms`);
 
     } catch (error) {
         console.error('GET Test failed:', error);
     }
 };
 
+// Function to test complex GET method
 const testGetComplexMethod = async (i) => {
-    const limitOptions = ((i % 100) + 1);
+    const limitOptions = (i % 100) + 1;
     const getOptions = {
         hostname: endPoint,
         port: port,
-        path: `/restaurants/cuisine/${cuisineName[(i % cuisineName.length)]}`,
+        path: `/restaurants/cuisine/${cuisineName[i % cuisineName.length]}`,
         method: 'GET'
     };
 
@@ -163,14 +136,14 @@ const testGetComplexMethod = async (i) => {
 
         assert.strictEqual(getResponse.statusCode, 200, 'Expected GET status code to be 200');
 
-        console.log(`GET ${getOptions.path} Status Code:`, getResponse.statusCode, `; Time Elapsed: ${elapsedTimeInMs}ms`);
+        console.log(`GET ${getOptions.path} Status Code: ${getResponse.statusCode}; Time Elapsed: ${elapsedTimeInMs}ms`);
 
     } catch (error) {
         console.error('GET Test failed:', error);
     }
 };
 
-
+// Function to test DELETE method
 const testDeleteMethod = async (i) => {
     const RestaurantAName = 'ArielsRestaurantA' + i;
 
@@ -193,14 +166,14 @@ const testDeleteMethod = async (i) => {
         const deleteResponseData = JSON.parse(deleteResponse.data);
         assert.deepStrictEqual(deleteResponseData, { success: true }, 'Expected success message');
 
-        console.log(`DELETE ${deleteOptions.path} Status Code:`, deleteResponse.statusCode, `; Time Elapsed: ${elapsedTimeInMs}ms`);
+        console.log(`DELETE ${deleteOptions.path} Status Code: ${deleteResponse.statusCode}; Time Elapsed: ${elapsedTimeInMs}ms`);
 
     } catch (error) {
         console.error('DELETE Test failed:', error);
     }
 };
 
-// Load test
+// Load test function to run all tests
 const loadTest = async () => {
     console.log(`Starting load test with ${numRequests} requests`);
 
@@ -222,5 +195,5 @@ const loadTest = async () => {
     }
 };
 
-
+// Execute load test
 loadTest().catch(console.error);

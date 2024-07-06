@@ -15,6 +15,14 @@ const memcachedActions = new RestaurantsMemcachedActions(MEMCACHED_CONFIGURATION
 // Create a new DynamoDB instance
 const dynamodb = new AWS.DynamoDB.DocumentClient({ region: AWS_REGION });
 
+/**
+ * GET /
+ * 
+ * Root endpoint that returns the application configuration.
+ * 
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ */
 app.get('/', (req, res) => {
     const response = {
         MEMCACHED_CONFIGURATION_ENDPOINT: MEMCACHED_CONFIGURATION_ENDPOINT,
@@ -25,17 +33,24 @@ app.get('/', (req, res) => {
     res.send(response);
 });
 
-
-// POST /restaurants
+/**
+ * POST /restaurants
+ * 
+ * Adds a new restaurant to the DynamoDB table and optionally caches it.
+ * 
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ */
 app.post('/restaurants', async (req, res) => {
     const restaurant = req.body;
 
+    // Validate the required fields
     if (!restaurant.name || !restaurant.cuisine || !restaurant.region) {
         res.status(400).send({ success: false, message: 'Missing required fields' });
         return;
     }
 
-    // Check if the restaurant already exists in the table before adding it (only dynamodb)
+    // Check if the restaurant already exists in the table before adding it
     const getParams = {
         TableName: TABLE_NAME,
         Key: {
@@ -53,9 +68,7 @@ app.post('/restaurants', async (req, res) => {
         } catch (cacheError) {
             console.error('Error accessing memcached:', cacheError);
         }
-    }
-
-    else {
+    } else {
         try {
             const data = await dynamodb.get(getParams).promise();
 
@@ -63,7 +76,6 @@ app.post('/restaurants', async (req, res) => {
                 res.status(409).send({ success: false, message: 'Restaurant already exists' });
                 return;
             }
-
         } catch (err) {
             console.error('POST /restaurants', err);
             res.status(500).send("Internal Server Error");
@@ -103,13 +115,13 @@ app.post('/restaurants', async (req, res) => {
             try {
                 const deletePromises = cacheKeysToInvalidate.map(key => memcachedActions.deleteRestaurants(key).catch(err => {
                     if (err.cmdTokens && err.cmdTokens[0] === 'NOT_FOUND') {
-                        //console.log(`Cache key "${key}" not found, ignoring.`);
+                        // console.log(`Cache key "${key}" not found, ignoring.`);
                     } else {
                         throw err; // Propagate other errors
                     }
                 }));
                 await Promise.all(deletePromises);
-                //console.log('Cache invalidated for:', cacheKeysToInvalidate);
+                // console.log('Cache invalidated for:', cacheKeysToInvalidate);
             } catch (cacheError) {
                 console.error('Error invalidating memcached:', cacheError);
             }
@@ -117,7 +129,7 @@ app.post('/restaurants', async (req, res) => {
             // Now add the new restaurant to the cache
             try {
                 await memcachedActions.addRestaurants(restaurant.name, restaurant);
-                //console.log('Added to cache:', restaurant.name);
+                // console.log('Added to cache:', restaurant.name);
             } catch (cacheError) {
                 console.error('Error adding to memcached:', cacheError);
             }
@@ -130,7 +142,14 @@ app.post('/restaurants', async (req, res) => {
     }
 });
 
-// GET /restaurants/:restaurantName
+/**
+ * GET /restaurants/:restaurantName
+ * 
+ * Retrieves a restaurant by name from the DynamoDB table and optionally caches it.
+ * 
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ */
 app.get('/restaurants/:restaurantName', async (req, res) => {
     const restaurantName = req.params.restaurantName;
 
@@ -190,7 +209,15 @@ app.get('/restaurants/:restaurantName', async (req, res) => {
     }
 });
 
+/**
+ * DELETE /restaurants/:restaurantName
 // DELETE /restaurants/:restaurantName
+ *
+ * Deletes a restaurant by name from the DynamoDB table and invalidates the cache.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ */
 app.delete('/restaurants/:restaurantName', async (req, res) => {
     const restaurantName = req.params.restaurantName;
 
@@ -261,7 +288,15 @@ app.delete('/restaurants/:restaurantName', async (req, res) => {
     }
 });
 
+/**
+ * POST /restaurants/rating
 // POST /restaurants/rating
+ *
+ * Updates the rating of a restaurant and invalidates the cache.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ */
 app.post('/restaurants/rating', async (req, res) => {
     const restaurantName = req.body.name;
     const newRating = req.body.rating;
@@ -360,7 +395,14 @@ app.post('/restaurants/rating', async (req, res) => {
     }
 });
 
-// GET /restaurants/cuisine/:cuisine
+/**
+ * GET /restaurants/cuisine/:cuisine
+ * 
+ * Retrieves a list of restaurants based on the specified cuisine and filters them by minimum rating and limit.
+ * 
+ * @param {Request} req - The request object containing the cuisine, minRating, and limit parameters.
+ * @param {Response} res - The response object to send back the list of filtered restaurants.
+ */
 app.get('/restaurants/cuisine/:cuisine', async (req, res) => {
     const cuisine = req.params.cuisine;
     let limit = parseInt(req.query.limit) || 10;
@@ -440,7 +482,14 @@ app.get('/restaurants/cuisine/:cuisine', async (req, res) => {
     }
 });
 
-// GET /restaurants/region/:region
+/**
+ * GET /restaurants/region/:region
+ * 
+ * Retrieves a list of restaurants based on the specified region and limits the number of results.
+ * 
+ * @param {Request} req - The request object containing the region and limit parameters.
+ * @param {Response} res - The response object to send back the list of restaurants.
+ */
 app.get('/restaurants/region/:region', async (req, res) => {
     const region = req.params.region;
     let limit = parseInt(req.query.limit) || 10;
@@ -514,7 +563,14 @@ app.get('/restaurants/region/:region', async (req, res) => {
     }
 });
 
-// GET /restaurants/region/:region/cuisine/:cuisine
+/**
+ * GET /restaurants/region/:region/cuisine/:cuisine
+ * 
+ * Retrieves a list of restaurants based on the specified region and cuisine, limiting the number of results.
+ * 
+ * @param {Request} req - The request object containing the region, cuisine, and limit parameters.
+ * @param {Response} res - The response object to send back the list of filtered restaurants.
+ */
 app.get('/restaurants/region/:region/cuisine/:cuisine', async (req, res) => {
     const region = req.params.region;
     const cuisine = req.params.cuisine;
@@ -591,7 +647,7 @@ app.get('/restaurants/region/:region/cuisine/:cuisine', async (req, res) => {
 });
 
 app.listen(80, () => {
-    console.log('Server is running on http://localhost:80');
+    console.log('Server is running on poer 80');
 });
 
 module.exports = { app };
